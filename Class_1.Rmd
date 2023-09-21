@@ -10,9 +10,9 @@ knitr::opts_chunk$set(echo = TRUE)
 
 # Building models
 ```{r}
+install.packages("R2jags")
+library(R2jags)
 ```
-
-
 
 # Model 1: Fixed theta
 ```{r}
@@ -27,34 +27,55 @@ for (t in 1:n_trials) {
 }
 
 sum(Gfixed)
-```
 
+plot(Gfixed)
+```
 
 # Model 2: Learning models
 ```{r}
 n_trials <- 100
 Glearn <- array(NA, c(n_trials)) # our number of guesses array (empty as of now)
 
+theta_learn <- array(NA, c(n_trials)) # our skill level (which is now subject to change (starting at 0.5)))
+alpha <- 0.01 # learning rate
 theta_1 <- 0.5 # our initial skill level
 
-theta_learn <- array(NA, c(n_trials)) # our skill level (which is now subject to change (starting at 0.5)))
-
-alpha <- 0.05 # learning rate
-
-theta_leatn[1] <- theta1
-Glearn[1] <- rbinom(1, 1, theta1)
+theta_learn[1] <- theta_1 # our initial skill level
+Glearn [1] <_ rbinom(1,1,theta1)
 
 
-for (t in 2:n_trials) { # we are starting from 2, because 1 is our initial level (0.5)
-    theta_learn[t] <- theta_learn[t - 1]^(1 / (1 + alpha))
+for (t in 2:n_trials){ # we are starting from 2, because 1 is our initial level (0.5)
+    theta_learn[t] <- theta_learn[t - 1]^(1 / (1 + alpha)) # 
     Glearn[t] <- rbinom(1, 1, theta_learn[t])
+    Glearn[1] <- rbinom(1, 1, theta_1[t])
 }
 
-sum(Glearn)
+#plot(Glearn)
+plot(theta_learn)
 ```
 
-
-# Model 3: Learning models with forgetting
+# model 3: Learning with multiple n_agents
 ```{r}
+n_trials <- 100
+n_agents <- 100
+Glearn <- array(NA, c(n_trials)) # our number of guesses array (empty as of now)
 
+theta_learn <- array(NA, c(n_trials)) # our skill level (which is now subject to change (starting at 0.5)))
+alpha <- 0.01 # learning rate
+theta_1 <- 0.5 # our initial skill level
+
+theta_learn[,1] <- theta_1 # our initial skill level
+Glearn [ ,1] <_ rbinom(1,1,theta1)
+
+
+for (s in 1:n_agents){
+    for (t in 2:n_trials) { # we are starting from 2, because 1 is our initial level (0.5)
+        theta_learn[s,t] <- theta_learn[s, t - 1]^(1 / (1 + alpha)) # 
+        Glearn[s,t] <- rbinom(1, 1, theta_learn[s,t])
+        #Glearn[1] <- rbinom(1, 1, theta_1[s,t])
+    }
+}
+
+#plot(Glearn)
+mean(colSums(Glearn))
 ```
