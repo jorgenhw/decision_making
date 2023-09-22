@@ -41,20 +41,19 @@ plot(Gfixed)
 library(R2jags)
 
 # The data for our model
-data <- list("Gfixed" = Gfixed, "n_trials" = n_trials)
-# The parameters we want to estimate
-params <- c("theta")
+data <- list("Gfixed", "n_trials")
+
+# The parameter we want to estimate
+params <- "theta"
+# given that the chicken sexer gets 73 correct guesses out of 100, what is his skill level?
 
 fixed_samples <- jags(data, inits=NULL, params, model.file="Module 1/chick_jags.txt", n.chains=3, n.iter=5000, n.burnin=1000, n.thin=1)
 
+# Now we've estimated theta (his skill level) given how the chickensexing went over 100 trials
+
 plot(density(fixed_samples$BUGSoutput$sims.list$theta[,1]))
 ```
-
-```{r}
-
-```
-
-
+**Variable explanation**
 n.chains = kindda like epochs: the number of times we want to run the model
 n.iter= the number of samples to be drawn in order to get an estimate of the underlying parameter
 n.burnin = warmup: ignoring the first number of burnings
@@ -63,20 +62,19 @@ n.thin = 1 means that we don't thin, should mostly be at 1
 # Model 2: Learning models
 ```{r}
 n_trials <- 100
-Glearn <- array(NA, c(n_trials)) # our number of guesses array (empty as of now)
+Glearn <- array(NA, c(n_trials)) # empty array which ends up containing the chickensexers guesses for each trial
 
 theta_learn <- array(NA, c(n_trials)) # our skill level (which is now subject to change (starting at 0.5)))
-alpha <- 0.01 # learning rate
-theta_1 <- 0.5 # our initial skill level
+alpha <- 0.07 # learning rate
+theta_1 <- 0.00001 # our initial skill level
 
-theta_learn[1] <- theta_1 # our initial skill level
-Glearn [1] <_ rbinom(1,1,theta1)
+theta_learn[1] <- theta_1 # our initial skill level (we hardcode this into the first position in the theta_learn array)
+Glearn[1] <- rbinom(1,1,theta_1) # out first guess based on our initial skill level,hardcoded into the chickensexer guess array
 
-
-for (t in 2:n_trials){ # we are starting from 2, because 1 is our initial level (0.5)
+for (t in 2:n_trials){ # we are starting from 2, because 1 is our initial guess based on the initial level (0.5)
     theta_learn[t] <- theta_learn[t - 1]^(1 / (1 + alpha)) # 
     Glearn[t] <- rbinom(1, 1, theta_learn[t])
-    Glearn[1] <- rbinom(1, 1, theta_1[t])
+   # Glearn[1] <- rbinom(1, 1, theta_1[t])
 }
 
 #plot(Glearn)
