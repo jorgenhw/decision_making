@@ -1,9 +1,9 @@
 model {
 
-  alpha ~ dbeta(1,1) # learning rate
-  theta1 ~ dbeta(1,1) # initial theta value
+  alpha ~ dbeta(1,1) # learning rate, flat
+  theta_1 ~ dbeta(1,1) # initial theta value
   
-  theta_learn[1] <- theta1 # initial theta value for the learning process
+  theta_learn[1] <- theta_1 # initial theta value for the learning process
 
   for (t in 2:n_trials) {
     

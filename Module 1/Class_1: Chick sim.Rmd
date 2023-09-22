@@ -64,17 +64,20 @@ n.thin = 1 means that we don't thin, should mostly be at 1
 n_trials <- 100
 Glearn <- array(NA, c(n_trials)) # empty array which ends up containing the chickensexers guesses for each trial
 
-theta_learn <- array(NA, c(n_trials)) # our skill level (which is now subject to change (starting at 0.5)))
+theta_learn <- array(NA, c(n_trials)) # our skill level (which is now subject to change (starting at 0.00001)))
 alpha <- 0.07 # learning rate
-theta_1 <- 0.00001 # our initial skill level
+theta_1 <- 0.0001 # our initial skill level
 
 theta_learn[1] <- theta_1 # our initial skill level (we hardcode this into the first position in the theta_learn array)
 Glearn[1] <- rbinom(1,1,theta_1) # out first guess based on our initial skill level,hardcoded into the chickensexer guess array
 
 for (t in 2:n_trials){ # we are starting from 2, because 1 is our initial guess based on the initial level (0.5)
-    theta_learn[t] <- theta_learn[t - 1]^(1 / (1 + alpha)) # 
+    theta_learn[t] <- theta_learn[t - 1]^(1 / (1 + alpha)) #here we are updating our skill level based on the previous skill level and the learning rate
+                                # we are updating the skill level for each t based on the previous t to the power of 1/(1+alpha) (the learning rate).
+                                # 
     Glearn[t] <- rbinom(1, 1, theta_learn[t])
-   # Glearn[1] <- rbinom(1, 1, theta_1[t])
+    print(paste0("Trial ", t, ": theta_learn = ", theta_learn[t], ", Glearn = ", Glearn[t]))
+
 }
 
 #plot(Glearn)
