@@ -4,14 +4,15 @@ output: html_document
 date: '2023-09-18'
 ---
 
+
 ```{r setup, include=FALSE}
 knitr::opts_chunk$set(echo = TRUE)
 ```
 
 # Building models
 ```{r}
-install.packages("R2jags")
-library(R2jags)
+#install.packages("R2jags")
+#library(R2jags)
 ```
 
 # Model 1: Fixed theta
@@ -29,7 +30,36 @@ for (t in 1:n_trials) {
 sum(Gfixed)
 
 plot(Gfixed)
+
 ```
+
+# Fit model to simulation
+```{r}
+#pacman::p_load(rjags,R2jags)
+install.packages("rjags", type="source")
+install.packages("R2jags", type="source")
+
+
+
+# The data for our model
+data <- list("Gfixed" = Gfixed, "n_trials" = n_trials)
+# The parameters we want to estimate
+params <- c("theta")
+
+fixed_samples <- jags(data, inits=NULL, params, model.file="chick_jags.txt", n.chains=3, n.iter=5000, n.burnin=1000, n.thin=1)
+
+#fixed_samples$BUGSoutput$sims.list$theta
+
+#plot(density(fixed_samples$BUGSoutput$sims.list$theta[,1]))
+```
+
+```
+
+
+n.chains = kindda like epochs: the number of times we want to run the model
+n.iter= the number of samples to be drawn in order to get an estimate of the underlying parameter
+n.burnin = warmup: ignoring the first number of burnings
+n.thin = 1 means that we don't thin, should mostly be at 1
 
 # Model 2: Learning models
 ```{r}
@@ -52,6 +82,23 @@ for (t in 2:n_trials){ # we are starting from 2, because 1 is our initial level 
 
 #plot(Glearn)
 plot(theta_learn)
+```
+
+# fit learning rate similuations to learning model
+```{r}
+#pacman::p_load(rjags,R2jags)
+install.packages("rjags", type="source")
+
+# The data for our model
+data <- list("Glearn" = Glearn, "n_trials" = n_trials)
+# The parameters we want to estimate
+params <- c("theta1", "alpha", "theta_learn") 
+
+learn_samples <- jags(data, inits=NULL, params, model.file="chick_learn_jags.txt", n.chains=3, n.iter=5000, n.burnin=1000, n.thin=1)
+
+#fixed_samples$BUGSoutput$sims.list$theta
+
+plot(density(learn_samples$BUGSoutput$sims.list$theta))
 ```
 
 # model 3: Learning with multiple n_agents

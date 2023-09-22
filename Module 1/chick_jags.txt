@@ -1,0 +1,15 @@
+model {
+
+    theta ~ dbeta(1,1) # parameter of beta distribution
+
+    for (t in 1:ntrials) {
+
+        Gfixed[t] ~ dbin(theta, 1)
+    }
+}
+
+
+# ~ = distributed as
+# dbin = binomial distribution
+# theta = skill level
+# dbeta = beta distribution

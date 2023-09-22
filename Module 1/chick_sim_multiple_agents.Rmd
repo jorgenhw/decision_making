@@ -1,0 +1,97 @@
+
+
+
+```{r}
+#install.packages("R2jags")
+#library(R2jags)
+
+
+set.seed(1983) # first random seed to ensure replicability of the series of "experiments" we want to run
+
+nseeds = 10 # number of "experiments" to run
+
+
+# Ignore this for now - will make sense later when we start playing with our poteriors
+# defining a function for calculating the maximum of the posterior density (not exactly the same as the mode)
+MPD <- function(x) {
+  density(x)$x[which(density(x)$y==max(density(x)$y))]
+}
+
+# creating vectors for keeping track of the outputs from our two simulations for the series of different experiments
+MPD_Glearn_flipped <- array(NA, c(nseeds))
+MPD_Glearn <- array(NA, c(nseeds))
+mean_Glearn_flipped <- array(NA, c(nseeds))
+mean_Glearn <- array(NA, c(nseeds))
+
+
+for (i in 1:nseeds) {
+  # ------ Model 1 - unfortunate learner with flipped labels
+  #simulation - running an experiment as if we knew the process and the parameter
+  
+  ntrials <- 100 # number of trials (chicken to be sexed)
+  nagents <- 1000 # number of agents to test on (aka. "applicants" for the job)
+  Glearn_flip <- array(NA, c(nagents,ntrials)) # vector to keep track of the guesses
+  
+  theta_learn_flip <- array(NA, c(nagents,ntrials)) # vector to keep track of the skill level
+  alpha_flip <- -0.03 # learning rate
+  theta1 <- 0.5
+  
+  theta_learn_flip[ ,1] <- theta1
+  Glearn_flip[ ,1] <- rbinom(1,1,theta1)
+  
+  for (s in 1:nagents){
+    for (t in 2:ntrials) {
+      theta_learn_flip[s,t] <- theta_learn_flip[s,t-1]^(1/(1+alpha_flip)) # theta updates on every trial according to the learning rate
+      Glearn_flip[s,t] <- rbinom(1,1,theta_learn_flip[s,t]) # guess on every trial drawn from a binomial distribution with a probability of (the updated) theta
+    }
+  }
+  
+  mean_Glearn_flipped[i] <- 100-mean(rowSums(Glearn_flip)) # calculating the mean number of "flipped corrects" across all 1000 applicants/agents
+  
+  hist(100-rowSums(Glearn_flip)) # plotting a histogram of the 1000 agents' number of "flipped corrects"
+  MPD_Glearn_flipped[i] <- MPD(100-rowSums(Glearn_flip)) # calculating the maximum of the density of the 1000 agents' number of "flipped corrects"
+  
+  # ------ Model 2 - "standard" learning model
+  #simulation - running an experiment as if we knew the process and the parameter
+  
+  ntrials <- 100
+  nagents <- 1000
+  Glearn <- array(NA, c(nagents,ntrials))
+  
+  theta_learn <- array(NA, c(nagents,ntrials))
+  alpha <- 0.05
+  theta1 <- 0.5
+  
+  theta_learn[ ,1] <- theta1
+  Glearn[ ,1] <- rbinom(1,1,theta1)
+  
+  for (s in 1:nagents){
+    for (t in 2:ntrials) {
+      theta_learn[s,t] <- theta_learn[s,t-1]^(1/(1+alpha))
+      Glearn[s,t] <- rbinom(1,1,theta_learn[s,t])
+    }
+  }
+  
+  mean_Glearn[i] <- mean(rowSums(Glearn))
+  
+  hist(rowSums(Glearn))
+  MPD_Glearn[i] <- MPD(rowSums(Glearn))
+}
+
+ylims = c(86.5,89.5) # pre-setting the ylims for the plotting
+
+# plotting the outcomes of the series of "experiments"
+plot(1:10,MPD_Glearn,type='l', ylim=ylims)
+lines(1:10,MPD_Glearn_flipped,type='l',col=2)
+legend('topleft',c('MPD Glearn', 'MPD Glearn_flipped'), pch = "-", col = c(1, 2))
+
+plot(1:10,mean_Glearn,type='l', ylim=ylims)
+lines(1:10,mean_Glearn_flipped,type='l',col=2)
+legend('topleft',c('mean Glearn', 'mean Glearn_flipped'), pch = "-", col = c(1, 2))
+
+mean(MPD_Glearn)
+mean(MPD_Glearn_flipped)
+
+mean(mean_Glearn)
+mean(mean_Glearn_flipped)
+```
