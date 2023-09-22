@@ -10,15 +10,19 @@ knitr::opts_chunk$set(echo = TRUE)
 ```
 
 # Building models
+
+
+#### Install dependencies
 ```{r}
-#install.packages("R2jags")
-#library(R2jags)
+library(R2jags)
 ```
 
 # Model 1: Fixed theta
 ```{r}
 # rbinom(p, size, probability) # r=we are drawing randomly
 # Three args: [p, size, prob] (p=number of trials/draws)
+
+
 n_trials <- 100
 Gfixed <- array(NA, c(n_trials)) # our number of guesses array (empty as of now)
 theta <- 0.7 # our skill level
@@ -30,28 +34,23 @@ for (t in 1:n_trials) {
 sum(Gfixed)
 
 plot(Gfixed)
-
 ```
 
 # Fit model to simulation
 ```{r}
-#pacman::p_load(rjags,R2jags)
-install.packages("rjags", type="source")
-install.packages("R2jags", type="source")
-
-
+library(R2jags)
 
 # The data for our model
 data <- list("Gfixed" = Gfixed, "n_trials" = n_trials)
 # The parameters we want to estimate
 params <- c("theta")
 
-fixed_samples <- jags(data, inits=NULL, params, model.file="chick_jags.txt", n.chains=3, n.iter=5000, n.burnin=1000, n.thin=1)
+fixed_samples <- jags(data, inits=NULL, params, model.file="Module 1/chick_jags.txt", n.chains=3, n.iter=5000, n.burnin=1000, n.thin=1)
 
-#fixed_samples$BUGSoutput$sims.list$theta
-
-#plot(density(fixed_samples$BUGSoutput$sims.list$theta[,1]))
+plot(density(fixed_samples$BUGSoutput$sims.list$theta[,1]))
 ```
+
+```{r}
 
 ```
 
@@ -86,23 +85,24 @@ plot(theta_learn)
 
 # fit learning rate similuations to learning model
 ```{r}
-#pacman::p_load(rjags,R2jags)
-install.packages("rjags", type="source")
-
 # The data for our model
 data <- list("Glearn" = Glearn, "n_trials" = n_trials)
 # The parameters we want to estimate
 params <- c("theta1", "alpha", "theta_learn") 
 
-learn_samples <- jags(data, inits=NULL, params, model.file="chick_learn_jags.txt", n.chains=3, n.iter=5000, n.burnin=1000, n.thin=1)
+learn_samples <- jags(data, inits=NULL, params, model.file="Module 1/chick_learn_jags.txt", n.chains=3, n.iter=5000, n.burnin=1000, n.thin=1)
 
 #fixed_samples$BUGSoutput$sims.list$theta
 
-plot(density(learn_samples$BUGSoutput$sims.list$theta))
+plot(density(learn_samples$BUGSoutput$sims.list$theta1))
+plot(density(learn_samples$BUGSoutput$sims.list$alpha))
 ```
 
 # model 3: Learning with multiple n_agents
 ```{r}
+nseeds = 10 # number of "experiments" to run
+
+
 n_trials <- 100
 n_agents <- 100
 Glearn <- array(NA, c(n_trials)) # our number of guesses array (empty as of now)
@@ -112,7 +112,7 @@ alpha <- 0.01 # learning rate
 theta_1 <- 0.5 # our initial skill level
 
 theta_learn[,1] <- theta_1 # our initial skill level
-Glearn [ ,1] <_ rbinom(1,1,theta1)
+Glearn [ ,1] <- rbinom(1,1,theta_1)
 
 
 for (s in 1:n_agents){

@@ -2,8 +2,7 @@
 
 
 ```{r}
-#install.packages("R2jags")
-#library(R2jags)
+library(R2jags)
 
 
 set.seed(1983) # first random seed to ensure replicability of the series of "experiments" we want to run

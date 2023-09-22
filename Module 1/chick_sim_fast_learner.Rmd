@@ -1,6 +1,5 @@
 ```{r}
 # Building models
-install.packages("R2jags")
 library(R2jags)
 
 set.seed(1983)

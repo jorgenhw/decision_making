@@ -1,15 +1,9 @@
 model {
 
-    theta ~ dbeta(1,1) # parameter of beta distribution
+    theta ~ dbeta(1,1) # parameter we want to estimate
 
-    for (t in 1:ntrials) {
+    for (t in 1:n_trials) { 
 
         Gfixed[t] ~ dbin(theta, 1)
     }
 }
-
-
-# ~ = distributed as
-# dbin = binomial distribution
-# theta = skill level
-# dbeta = beta distribution
