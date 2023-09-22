@@ -1,6 +1,6 @@
 model {
 
-    theta ~ dbeta(1,1) # parameter we want to estimate
+    theta ~ dbeta(1,1) # parameter we want to estimate. We set our prior expectation to be that theta is equally likely to be any value between 0 and 1 (= 1,1: a uninformed prior)
 
     for (t in 1:n_trials) { 
 

@@ -24,11 +24,11 @@ library(R2jags)
 
 
 n_trials <- 100
-Gfixed <- array(NA, c(n_trials)) # our number of guesses array (empty as of now)
+Gfixed <- array(NA, c(n_trials)) # creates an empty array of length n_trials (100)
 theta <- 0.7 # our skill level
 
-for (t in 1:n_trials) {
-    Gfixed[t] <- rbinom(1, 1, theta) # we are taking 1 sample at the time at .7 probability due to skill level
+for (t in 1:n_trials) { # for each trial...
+    Gfixed[t] <- rbinom(1, 1, theta) # we are taking 1 sample at the time (summing to 100) at .7 probability due to skill level
 }
 
 sum(Gfixed)
