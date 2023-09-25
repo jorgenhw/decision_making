@@ -74,14 +74,14 @@ Glearn[1] <- rbinom(1,1,theta_1) # out first guess based on our initial skill le
 for (t in 2:n_trials){ # we are starting from 2, because 1 is our initial guess based on the initial level (0.5)
     theta_learn[t] <- theta_learn[t - 1]^(1 / (1 + alpha)) #here we are updating our skill level based on the previous skill level and the learning rate
                                 # we are updating the skill level for each t based on the previous t to the power of 1/(1+alpha) (the learning rate).
-                                # 
-    Glearn[t] <- rbinom(1, 1, theta_learn[t])
-    print(paste0("Trial ", t, ": theta_learn = ", theta_learn[t], ", Glearn = ", Glearn[t]))
+    Glearn[t] <- rbinom(1, 1, theta_learn[t]) # here we are updating our guess based on our updated skill level, drawn from a binomial distribution
+    print(paste0("Trial ", t, ": theta_learn = ", theta_learn[t], ", Glearn = ", Glearn[t])) # printing each trial run
 
 }
 
 #plot(Glearn)
 plot(theta_learn)
+plot(Glearn)
 ```
 
 # fit learning rate similuations to learning model
@@ -89,20 +89,19 @@ plot(theta_learn)
 # The data for our model
 data <- list("Glearn" = Glearn, "n_trials" = n_trials)
 # The parameters we want to estimate
-params <- c("theta1", "alpha", "theta_learn") 
+params <- c("theta_1", "alpha", "theta_learn") 
 
 learn_samples <- jags(data, inits=NULL, params, model.file="Module 1/chick_learn_jags.txt", n.chains=3, n.iter=5000, n.burnin=1000, n.thin=1)
 
 #fixed_samples$BUGSoutput$sims.list$theta
 
-plot(density(learn_samples$BUGSoutput$sims.list$theta1))
+plot(density(learn_samples$BUGSoutput$sims.list$theta_1))
 plot(density(learn_samples$BUGSoutput$sims.list$alpha))
 ```
 
 # model 3: Learning with multiple n_agents
 ```{r}
-nseeds = 10 # number of "experiments" to run
-
+nseeds = 10 # number of "experiments" to runs
 
 n_trials <- 100
 n_agents <- 100
@@ -126,4 +125,66 @@ for (s in 1:n_agents){
 
 #plot(Glearn)
 mean(colSums(Glearn))
+```
+
+
+
+
+```{r}
+# Model -- w. fatique and increased concentration (memory boost) after wrong guess
+n_trials <- 500
+G_learn <- array(NA, c(n_trials)) # success = 1, fail = 0
+skill_level <- array(NA, c(n_trials))
+theta_1 <- 0.5
+alpha <- 0.01
+
+fatigue <- array(NA, c(n_trials))
+guess_prob <- array(NA, c(n_trials))
+
+# Memory Effect parameters
+memory_boost <- 0.05 # how much to boost theta_learn after a wrong guess
+boost_duration <- 8 # how many trials the boost lasts for
+trials_since_mistake <- Inf # track how many trials since last mistake
+
+# First trial
+skill_level[1] <- theta_1
+fatigue[1] <- 0.01
+guess_prob[1] <- skill_level[1]*(1-fatigue[1]) # will practically be .5
+guess_prob[1] <- max(0, min(1, guess_prob[1])) # between 1 and 0
+G_learn[1] <- rbinom(1,1,guess_prob[1])
+
+# If a mistake is made on the first trial
+if(G_learn[1] == 0) trials_since_mistake <- 1
+
+for(t in 2:n_trials){
+  skill_level[t] <- skill_level[t-1]^(1/(1+alpha))
+  fatigue[t] <- 0 + (0.4/(1+exp(-0.04*(t-250)))^(1/1))
+  
+  guess_prob[t] <- skill_level[t]*(1-fatigue[t])
+  
+  # apply the memory effect if within the boost_duration since last mistake
+  if(trials_since_mistake <= boost_duration){
+    guess_prob[t] <- guess_prob[t] + memory_boost
+  }
+
+  # Ensure that guess prob between 0 and 1
+  guess_prob[t] <- max(0, min(1, guess_prob[t]))
+  
+  G_learn[t] <- rbinom(1,1,guess_prob[t])
+  
+  # if a mistake is made, reset trials_since_mistake
+  if(!is.na(G_learn[t]) && G_learn[t] == 0){
+    
+    trials_since_mistake <- 1
+  } else {
+    trials_since_mistake <- trials_since_mistake + 1
+  }
+}
+
+# Plotting
+colors <- ifelse(G_learn == 1, "red", "blue")
+plot(skill_level, col = "forestgreen")+title("Skill level")
+plot(guess_prob, col = colors)+title("Success = red, Fail = blue")
+
+# plot(G_learn)
 ```
