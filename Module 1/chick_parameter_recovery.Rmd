@@ -27,7 +27,6 @@ MPD <- function(x) {
 # Model 1: Fixed theta
 ```{r}
 #----- Model 1: fixed theta-------
-
 nruns <- 100 # consider only running 20 if you don't wanna wait too long to have a glance at the output
 n_trials <- 100
 
@@ -83,7 +82,7 @@ plot(trueTheta,inferredTheta, main="theta")
 # Model 2: theta is a random variable
 ```{r}
 # ----- Model 2: learning model-------
-nruns <- 20 # consider only running 20 if you don't wanna wait too long to have a glance at the output
+nruns <- 50 # consider only running 20 if you don't wanna wait too long to have a glance at the output
 n_trials <- 100
 
 trueAlpha <- c(NA,nruns) # array for logging the true alpha
@@ -106,10 +105,10 @@ for (i in 1:nruns) {
   # see longer comment above for why we sample from a uniform distribution here
   alpha <- runif(1,0,1) # randomly picking an alpha-value (between 0 and 1) for each iteration
   #print(alpha) # if you wanna print the different values for alpha in the console
-  theta1 <- runif(1,0,1) # randomly picking an initial theta-value (between 0 and 1) for each iteration
+  theta_1 <- runif(1,0,1) # randomly picking an initial theta-value (between 0 and 1) for each iteration
   #print(theta1) # if you wanna print the different values for alpha in the console
   
-  theta_learn[1] <- theta1 
+  theta_learn[1] <- theta_1 
   
   for (t in 2:n_trials) {
     
@@ -119,7 +118,7 @@ for (i in 1:nruns) {
   }
   
   data <- list("Glearn","n_trials")
-  params <- c("theta_learn","theta1","alpha")
+  params <- c("theta_learn","theta_1","alpha")
   
   samples <- jags.parallel(data, 
                            inits=NULL, 
@@ -138,8 +137,8 @@ for (i in 1:nruns) {
   inferredAlpha[i] <- MPD(X$alpha)
   
   # recover theta1
-  trueTheta1[i] <- theta1
-  inferredTheta1[i] <- MPD(X$theta1)
+  trueTheta1[i] <- theta_1
+  inferredTheta1[i] <- MPD(X$theta_1)
 
 }
 
