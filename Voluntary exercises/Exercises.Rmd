@@ -1,0 +1,39 @@
+# Exercises
+
+
+Suppose you flip a coin n=10 times and observe heads k=7 times (heads are coded as 1s). Our model for the data is the Binomial distribution.
+
+
+
+```{r}
+# Compute the p-value for the null hypothesis: θ=.5 of a fair coin.
+# Hint: Use the dbinom function.
+dbinom(7,10,.5)
+
+#Plot the likelihood curve for possible values of θ. Which value maximizes the likelihood?
+
+
+```
+
+
+```{r}
+require('coda')
+require('rjags')
+require('R2jags')
+
+
+ms='
+model {
+  theta ~ dunif(0, 1) 
+  k ~ dbinom(theta, N)
+}
+'
+
+params = c('theta')
+data = list('k' = 7, 'N' = 10)
+model = jags.model(textConnection(ms), data = data,
+                   n.chains = 3, n.adapt = 1000, quiet = TRUE)
+samples = coda.samples(model, variable.names = params, n.iter = 10000)
+
+
+```

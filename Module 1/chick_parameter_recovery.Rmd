@@ -83,7 +83,7 @@ plot(trueTheta,inferredTheta, main="theta")
 # Model 2: theta is a random variable
 ```{r}
 # ----- Model 2: learning model-------
-nruns <- 100 # consider only running 20 if you don't wanna wait too long to have a glance at the output
+nruns <- 20 # consider only running 20 if you don't wanna wait too long to have a glance at the output
 n_trials <- 100
 
 trueAlpha <- c(NA,nruns) # array for logging the true alpha
