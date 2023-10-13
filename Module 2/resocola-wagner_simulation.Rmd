@@ -2,9 +2,8 @@
 ```{r}
 # simple learning relationship
 #  must be from 0 - 1 rates
-
 alphaA <- 1
-beta <- .2
+beta <- 0.2
 
 lambda <- 1
 
@@ -26,40 +25,40 @@ plot(VA)
 ```{r}
 # rates must be from 0 - 1
 alphaA <- 1
-alphax <- .5 #NOTE LOWER SALIENCE
-beta <-.2
+alphaX <- 0.5 #NOTE LOWER SALIENCE
+beta <- 0.2
 
 lambda <- 1
 
-VA <-array(0,c(15)) 
+VA <-array(0, c(15)) 
 VA[1] <- 0
 
-VX <-array(0,c(15)) 
-VX [1] <- 0
+VX <- array(0, c(15)) 
+VX[1] <- 0
 
-VAX <-array(0,c(15)) 
-VAX [1] <- 0
+VAX <-array(0, c(15)) 
+VAX[1] <- 0
 
-delta_VA <-array(0,c(15)) 
-delta_VA [1] <- 0
+delta_VA <- array(0, c(15)) 
+delta_VA[1] <- 0
 
-delta_vX <-array(0,c(15))
-delta_vx[1] <- 0
+delta_VX <- array(0, c(15))
+delta_VX[1] <- 0
 
 #learning
 for (t in 2:15) {
     
-    delta_VA[t] <- alphaA*beta*(lambda-VAX[t-1]) 
-    VA[t] <- (VA [t-1]+ delta_VA[t])
-    delta_vx[t] <- alphax*beta*(lambda-VAX[t-1]) 
-    vx[t] <- (vx[t-1]+ delta_vx[t]) 
-    AX[t] <- VA[t] + vx[t]
+    delta_VA[t] <- alphaA * beta * (lambda-VAX[t-1])
+    VA[t] <- (VA[t-1] + delta_VA[t])
+    delta_VX[t] <- alphaX * beta * (lambda-VAX[t-1])
+    VX[t] <- (VX[t-1]+ delta_VX[t])
+    VAX[t] <- VA[t] + VX[t]
 
 }
 
 par (mfrow=c(1,2)) 
 plot (VA,ylim=c(0,1))
-plot (vx, ylim=c(0,1))
+plot (VX, ylim=c(0,1))
 ```
 
 # Blocking
@@ -84,26 +83,28 @@ delta_VA <-array(0,c(15))
 delta_VA [1] <- 0
 
 delta_VX <-array (0,c(15))
-delta_vx[1] <- 0
+delta_VX[1] <- 0
 
 #train on simple stimulus A 
 for (t in 2:7) {
 
-    delta_VA[t] <- alphaA * beta *(lambda-VAX [t-1]) 
-    VA[t] <- (VA [t-1]+ delta_VA[t])
+    delta_VA[t] <- alphaA * beta *(lambda-VAX[t-1])
+    VA[t] <- (VA[t-1]+delta_VA[t])
     #delta_vx[t] <- alphax beta * (lambda-VAX [t-1]) 
     #vx[t] <- (vx[t-1] + delta_vx[t])
-    VAX[t] <- VA[t] + vx[t]
+    VAX[t] <- VA[t] + VX[t]
 }
 
 #Add X - train on compound AX 
 for (t in 8:15) {
 
-    delta_VA[t] <- alphaA beta (lambda-VAX [t-1]) 
-    VA[t] <- (VA [t-1]+ delta_VA[t])
-    delta_vx[t] <- alphax beta (lambda-VAX [t-1]) 
-    vx[t] <- (vx[t-1] + delta_vx[t])
+    delta_VA[t] <- alphaA*beta*(lambda-VAX[t-1]) 
+    VA[t] <- (VA[t-1]+ delta_VA[t])
+    delta_VX[t] <- alphaX*beta*(lambda-VAX[t-1]) 
+    VX[t] <- (VX[t-1] + delta_VX[t])
     VAX[t] <- VA[t] + VX[t]
 }
 
+plot(VA, ylim=c(0,1))
+plot(VX, ylim=c(0,1))
 ```

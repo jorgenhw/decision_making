@@ -1,0 +1,190 @@
+# One armed bandit implementation
+
+
+### Loading packages
+```{r}
+pacman::p_load(hesim, extraDistr,R2jags)
+```
+
+```{r}
+MPD <- function(x) {
+  density(x)$x[which(density(x)$y==max(density(x)$y))]
+}
+```
+
+```{r}
+set.seed(1983)
+```
+
+
+```{r}
+random <- function(payoff, ntrials, b) {
+
+    theta <- .7 # probability of choosing machine B
+
+    b <- c(theta, 1-theta)
+
+    # Choice array:
+    x <- array(0, c(ntrials))
+    r <- array(0, c(ntrials))
+
+    # choise loop: 
+    for (t in 1:ntrials) {
+
+        x[t] <- rcat(1, b) # rcat = random categorical choice
+        
+        r[t] <- payoff[t,x[t]] # what will I get for the choice I make
+
+    }
+    result <- list(x=x, r=r)
+}
+```
+
+# Payoff structure
+```{r}
+ntrials <- 100
+
+# Machine A
+Aprob <- .3 # probability of reward
+Arew <- 2 # reward amount
+
+# Machine B
+Bprob <- .7 # probability of reward
+Brew <- 1 # reward amount
+
+payoff <- cbind(rbinom(ntrials,1,Aprob)*Arew, rbinom(ntrials,1,Bprob)*Brew)
+
+colSums(payoff) # this is the total reward for each machine
+
+theta = .7
+b <- c(theta, 1-theta)
+
+random_sims <- random(payoff, ntrials,b)
+
+random_sims
+
+
+```
+
+```{r}
+
+# Next step: building a model #########################
+#random_sims <- random(payoff, ntrials, b)
+
+```
+
+
+
+```{r}
+x <- random_sims$x # x is the choice
+data <- list("x", "ntrials")
+
+params <- c("b") # the parameters to track
+
+samples <- jags(data, inits=NULL, params, model.file = "Module 2/random.txt", n.chains = 3, n.iter = 5000, n.burnin = 1000, n.thin = 1)
+
+X <- samples$BUGSoutput$sims.list
+leftBias <- X$b[,1]
+rightBias <- X$b[,2]
+
+par(mfrow=c(2,1))
+plot(density(leftBias))
+plot(density(rightBias))
+
+```
+
+```{r}
+# more parameter recovery
+
+### NOW: FULL THROTTLE
+niterations <- 100
+true_theta <- array(0, c(niterations))
+infer_b1 <- array(0, c(niterations))
+infer_b2 <- array(0, c(niterations))
+
+for (i in 1:niterations) {
+  
+  theta <- runif(1,0,1)
+  b <- c(theta, 1-theta)
+  
+  random_sims <- random(payoff, ntrials, b)
+  
+  x <- random_sims$x
+  
+  data <- list("x", "ntrials")
+  
+  params <- c("b")
+  
+  samples <- jags(data, inits=NULL, params,
+                  model.file = "Module 2/random.txt",
+                  n.chains = 3, n.iter = 5000, n.burnin = 1000, n.thin=1)
+  
+  true_theta[i] <- theta
+  
+  X <- samples$BUGSoutput$sims.list
+  
+  infer_b1[i] <- MPD(X$b[,1])
+  infer_b2[i] <- MPD(X$b[,2])
+  
+}
+
+par(mfrow=c(2,1))
+plot(true_theta, infer_b1)
+plot(1-true_theta, infer_b2)
+#plot(infer_b1)
+#plot(infer_b2)
+```
+```{r}
+par(mfrow=c(2,1))
+plot(true_theta, infer_b1)
+plot(1-true_theta, infer_b2)
+
+```
+
+# Building an agent to do this for us - random choice between the two agents
+```{r}
+random <- function(payoff, ntrials, b) {
+
+    theta <- .7 # probability of choosing machine B
+
+    b <- c(theta, 1-theta)
+
+    # Choice array:
+    x <- array(0, c(ntrials))
+    r <- array(0, c(ntrials))
+
+    # choise loop: 
+    for (t in 1:ntrials) {
+
+        x[t] <- rcat(1, b) # rcat = random categorical choice
+        
+        r[t] <- payoff[t,x[t]] # what will I get for the choice I make
+
+    }
+    result <- list(x=x, r=r)
+}
+```
+
+# Building an agent to do this for us - random choice between the two agents
+```{r}
+random <- function(payoff, ntrials, b) {
+
+    theta <- .7 # probability of choosing machine B
+
+    b <- c(theta, 1-theta)
+
+    # Choice array:
+    x <- array(0, c(ntrials))
+    r <- array(0, c(ntrials))
+
+    # choise loop: 
+    for (t in 1:ntrials) {
+
+        x[t] <- rcat(1, b) # rcat = random categorical choice
+        
+        r[t] <- payoff[t,x[t]] # what will I get for the choice I make
+
+    }
+    result <- list(x=x, r=r)
+}
+```

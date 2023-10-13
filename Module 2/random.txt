@@ -1,0 +1,19 @@
+model {
+
+    # Misspecified priors
+    #b[1] ~ dunif(0,1) # uniform distribution between 0 and 1 since it is a probability
+    #b[2] ~ dunif(0,1) # uniform distribution between 0 and 1 since it is a probability
+
+    # correctly specified priors
+    theta ~ dunif(0,1)
+    b[1] <- theta
+    b[2] <- 1-theta
+
+
+    for (t in 1:ntrials) {
+
+        x[t] ~ dcat(b) # should contain the two probabilities equalling to 1
+
+        
+    }
+}
