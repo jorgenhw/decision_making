@@ -1,27 +1,19 @@
-
-# Setup
-```{r}
 # PVL recovery
-
-library(extraDistr)
-library(R2jags)
+install.packages("pacman")
+pacman::p_load(extraDistr, R2jags, parallel, ggpubr)
 
 set.seed(1983)
 
+### NB! Don't forget to set your working directory
+#setwd('YOUR/WORKING/DIRECTORY')
+
 # defining a function for calculating the maximum of the posterior density (not exactly the same as the mode)
-MPD <- function(x) { # makes it easier to summarize the posterior density of a parameter
+MPD <- function(x) {
   density(x)$x[which(density(x)$y==max(density(x)$y))]
 }
-```
 
-
-
-
-
-```{r}
 #------ create task environment -------------------
-
-# NB! mod(ntrials, nstruct) (aka. ntrials %% nstruct) must be 0                     ######## Parameters ########
+# NB! mod(ntrials, nstruct) (aka. ntrials %% nstruct) must be 0
 ntrials <- 100 # total number of trials in our payoff structure
 nstruct <- 10 # size of our subdivisions for pseudorandomization
 freq <- 0.5 # probability of our frequent losses (we have losses half of the time)
@@ -33,8 +25,6 @@ good_r <- 50 # "good" winnings
 good_freq_l <- -50 # "good" frequent loss
 good_infreq_l <- -250 # "good" infrequent loss
 
-
-                                                                                    ####### Decks ##########
 # Bad frequent
 A_R <- rep(bad_r, nstruct) # we win on every trials
 A_L <- c(rep(bad_freq_l, nstruct*freq),rep(0,nstruct*(1-freq))) # we have losses half of the time
@@ -51,7 +41,6 @@ C_L <- c(rep(good_freq_l, nstruct*freq),rep(0,nstruct*(1-freq)))
 D_R <- rep(good_r, nstruct)
 D_L <- c(rep(good_infreq_l, nstruct*infreq),rep(0,nstruct*(1-infreq)))
 
-                                                                                  ######### payoff structure #########
 # create the pseudorandomized full payoff structure
 A <- array(NA,ntrials) # setting up and empty array to be filled
 B <- array(NA,ntrials)
@@ -81,59 +70,45 @@ payoff <- cbind(A,B,C,D)/100 # combining all four decks as columns with each 100
 # let's look at the payoff
 colSums(payoff) # the two bad decks should sum to -25 (i.e. -2500), and the two good ones to 25 (i.e. 2500)
 #----------------------------------------------------
-```
 
-
-
-```{r}
 
 #-------test PVL delta function and jags script ---------
 
 #---set params
-# parameters for the PVL delta
-w <- 2 # weighting parameter (aka. loss aversion) # the higher, the more we weigh losses over gains
+
+w <- 2 # weighting parameter (aka. loss aversion)
 A <- .5 # shape parameter (aka. risk aversion)
-theta <- 3 # inverse heat parameter (aka. choice consistency/determinism) 
-a <- .1 # learning rate parameter (aka. prediction error weighting) # how much we update our expectations based on the prediction error
+theta <- 3 # inverse heat parameter (aka. choice consistency/determinism)
+a <- .1 # learning rate parameter (aka. prediction error weighting)
 
 #ntrials <- 100 # we have already specified this earlier (see line 15)
 
-source("Module 3/PVL.R") # calling function
+source("PVL.R")
+PVL_sims <- PVL(payoff,ntrials,w,A,a,theta)
 
-PVL_sims <- PVL(payoff,ntrials,w,A,a,theta) 
-```
-
-# Plotting
-```{r}
 par(mfrow=c(2,2))
 plot(PVL_sims$Ev[,1], ylim=c(-1,1))
 plot(PVL_sims$Ev[,2], ylim=c(-1,1))
 plot(PVL_sims$Ev[,3], ylim=c(-1,1))
 plot(PVL_sims$Ev[,4], ylim=c(-1,1))
 title(paste("Traces of expeceted value (Ev) for all four decks over", ntrials, "trials"), line = -1, outer = TRUE)
-```
 
-
-```{r}
-x <- PVL_sims$x # choices
-X <- PVL_sims$X # rewards
+x <- PVL_sims$x
+X <- PVL_sims$X
 
 # set up jags and run jags model
-data <- list("x","X","ntrials")  # consists of the observed variables: choises and observed payoffs, number of trials
-params<-c("w","A","theta","a") # W = weighting parameter, A = shape parameter, theta = inverse heat parameter, a = learning rate parameter
-temp_samples <- jags(data, inits=NULL, params,
+data <- list("x","X","ntrials") 
+params<-c("w","A","theta","a")
+temp_samples <- jags.parallel(data, inits=NULL, params,
                      model.file ="PVL.txt",
-                     n.chains=3, n.iter=5000, n.burnin=1000, n.thin=1)
+                     n.chains=3, n.iter=5000, n.burnin=1000, n.thin=1,
+                     n.cluster=3)
 
-# recovery for these three variables
 recov_w <- temp_samples$BUGSoutput$sims.list$w
 recov_A <- temp_samples$BUGSoutput$sims.list$A
 recov_a <- temp_samples$BUGSoutput$sims.list$a
 recov_theta <- temp_samples$BUGSoutput$sims.list$theta
-```
 
-# Plotting the above
-```{r}
 par(mfrow=c(4,1))
 plot(density(recov_w))
 plot(density(recov_A))
@@ -162,5 +137,13 @@ title(paste("Density plots (for recovered w, A, a & theta) with ntrials =", ntri
 # plot(true_A,infer_A)
 # plot(true_a,infer_a)
 # plot(true_theta,infer_theta)
-Click to copy to clipboard
-```
+
+
+# plotting code courtesy of Lasse
+# source('recov_plot.R')
+# # source('/work/Module 3/recov_plot.R')
+# pl1 <- recov_plot(true_w, infer_w, c("true w", "infer w"), 'smoothed linear fit')
+# pl2 <- recov_plot(true_A, infer_A, c("true A", "infer A"), 'smoothed linear fit')
+# pl3 <- recov_plot(true_a, infer_a, c("true a", "infer a"), 'smoothed linear fit')
+# pl4 <- recov_plot(true_theta, infer_theta, c("true theta", "infer theta"), 'smoothed linear fit')
+# ggarrange(pl1, pl2, pl3, pl4)

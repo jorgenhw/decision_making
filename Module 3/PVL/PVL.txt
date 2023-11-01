@@ -19,8 +19,7 @@ model {
     
     for (d in 1:4) {
       
-      u[t,d] <- ifelse(X[t-1]<0,-w*abs(X[t-1])^A,X[t-1]^A) # here we do the utility function which. Utility is the one in which we incorpate risk aversiveness
-                                                           # If 
+      u[t,d] <- ifelse(X[t-1]<0,-w*abs(X[t-1])^A,X[t-1]^A)
       
       Ev_update[t,d] <- Ev[t-1,d] + (a * (u[t,d] - Ev[t-1,d]))
       
@@ -34,7 +33,7 @@ model {
       p[t,d] <- exp_p[t,d]/sum(exp_p[t,])
     }
       
-    x[t] ~ dcat(p[t,]) #
+    x[t] ~ dcat(p[t,])
     
   }
 }
