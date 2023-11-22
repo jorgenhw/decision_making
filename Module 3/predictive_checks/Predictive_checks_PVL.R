@@ -1,4 +1,4 @@
-install.packages("pacman")
+#install.packages("pacman")
 pacman::p_load(R2jags, parallel, ggplot2)
 
 
@@ -17,11 +17,11 @@ MPD <- function(x) {
 # available here: https://figshare.com/articles/dataset/IGT_raw_data_Ahn_et_al_2014_Frontiers_in_Psychology/1101324
 
 #load control data
-ctr_data <- read.table("data/IGTdata_healthy_control.txt",header=TRUE)
+ctr_data <- read.table("/Users/wibe/Desktop/CogSci/decision_making/decision_making/Module 3/data/IGTdata_healthy_control.txt",header=TRUE)
 
 #----------prepare data for jags models - want trial x subject arrays for choice and gain & loss ----
 # identify and count unique subject IDs
-subIDs <- unique(ctr_data$subjID)
+subIDs <- unique(ctr_data$subjID) # unique() returns the unique values of a vector
 nsubs <- length(subIDs)
 ntrials_max <- 100
 
@@ -44,7 +44,7 @@ X_all <- array(0,c(nsubs,ntrials_max))
 for (s in 1:nsubs) {
   
   #record n trials for subject s
-  ntrials_all[s] <- length(x_raw[ctr_data$subjID==subIDs[s]])
+  ntrials_all[s] <- length(x_raw[ctr_data$subjID==subIDs[s]]) # taking the ID for each subject and feed it into the x_raw array
   
   #pad trials with NA if n trials < maximum (i.e. 100)
   x_sub <- x_raw[ctr_data$subjID==subIDs[s]] 
@@ -67,13 +67,17 @@ for (s in 1:nsubs) {
 x <- x_all[1,] # selecting choices from subj 1
 X <- X_all[1,] # selecting payoffs from subj 1
 
+# subject 7 didn't do all trials: missing 3 trials
+x_7 <- x_all[7,] # selecting choices from subj 7
+X_7 <- X_all[7,] # selecting payoffs from subj 7
+
 ntrials <- ntrials_all[1]
 
 # set up jags and run jags model on one subject
 data <- list("x","X","ntrials") 
 params<-c("w","A","theta","a","p")
 temp_samples <- jags.parallel(data, inits=NULL, params,
-                              model.file ="PVL/PVL.txt",
+                              model.file ="Module 3/PVL/PVL.txt",
                               n.chains=3, n.iter=5000, n.burnin=1000, n.thin=1, n.cluster=3)
 
 # let's look at the posteriors for the parameters
@@ -118,7 +122,7 @@ for (t in 1:ntrials) {
   x_predict[t] <- which.max(p_predict)
 }
 # how well did our model do?
-sum(x_predict==x)
+sum(x_predict==x) # = 49
 
 
 # let's see how the model goes for more than 1 subject. Let's run this on all subjects
@@ -137,7 +141,7 @@ for (s in 1:nsubs) {
   data <- list("x","X","ntrials") 
   params<-c("w","A","theta","a","p")
   temp_samples <- jags.parallel(data, inits=NULL, params,
-                                model.file ="PVL/PVL.txt",
+                                model.file ="Module 3/PVL/PVL.txt",
                                 n.chains=3, n.iter=5000, n.burnin=1000, n.thin=1, n.cluster=3)
   
   p_post <- temp_samples$BUGSoutput$sims.list$p
@@ -176,6 +180,9 @@ pred_df$std <- sd(pred_df$pred_success)
 pred_df$chance <- .25
 ggplot(pred_df, aes(sub, pred_success_adjust)) +
   geom_point() +
+  geom_text(aes(label=sub), vjust=-1) + # Add this line to add numbers
   geom_line(aes(y=chance), linetype="dashed", color = "black") +
   geom_ribbon(aes(xmin = -Inf, xmax = Inf, ymin = avg - std, ymax = avg + std), fill = "pink", alpha = 0.6) + 
   geom_line(aes(y=avg))
+
+

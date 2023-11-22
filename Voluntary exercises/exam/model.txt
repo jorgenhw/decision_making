@@ -1,0 +1,18 @@
+model {
+  # Prior distributions
+  for (i in 1:num_players) {
+    roll_rate[i] ~ dexp(1)
+    steal_prob[i] ~ dbeta(2, 2)
+  }
+
+  # Likelihood
+  for (i in 1:num_players) {
+    for (j in 1:num_players) {
+      if (i != j) {
+        logit_p[i, j] <- roll_rate[i] * (1 - exp(-distance / friendship[i, j])) * (1 - exp(-forgiveness[i])) * (1 - exp(-risk_aversion[j]))
+        p[i, j] <- 1 / (1 + exp(-logit_p[i, j]))
+        steals[i, j] ~ dbern(p[i, j])
+      }
+    }
+  }
+}

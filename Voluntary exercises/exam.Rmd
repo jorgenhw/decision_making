@@ -1,0 +1,63 @@
+```{r}
+library(rjags)
+
+```
+
+
+```{r}
+# Define the JAGS model
+model_string <- "
+model {
+  # Prior distributions
+  for (i in 1:num_players) {
+    roll_rate[i] ~ dexp(1)
+    steal_prob[i] ~ dbeta(2, 2)
+  }
+
+  # Likelihood
+  for (i in 1:num_players) {
+    for (j in 1:num_players) {
+      if (i != j) {
+        logit_p[i, j] <- roll_rate[i] * (1 - exp(-distance / friendship[i, j])) * (1 - exp(-forgiveness[i])) * (1 - exp(-risk_aversion[j]))
+        p[i, j] <- 1 / (1 + exp(-logit_p[i, j]))
+        steals[i, j] ~ dbern(p[i, j])
+      }
+    }
+  }
+}
+"
+
+# Simulate the game
+set.seed(123)
+num_players <- 5
+distance <- 100  # Distance between players in cm
+
+# Simulate player distance in a matrix
+
+
+
+forgiveness <- runif(num_players, min = 1, max = 7)
+friendship <- matrix(runif(num_players * num_players, min = 1, max = 7), nrow = num_players)
+risk_aversion <- runif(num_players, min = 1, max = 7)
+
+# Combine data
+data <- list(
+  num_players = num_players,
+  distance = distance,
+  forgiveness = forgiveness,
+  friendship = friendship,
+  risk_aversion = risk_aversion
+)
+
+# Initialize JAGS model
+jags_model <- jags.model(textConnection(model_string), data = data, n.chains = 4)
+
+# Burn-in and update
+update(jags_model, 1000)
+
+# Run the simulation
+samples <- coda.samples(jags_model, variable.names = c("roll_rate", "steal_prob"), n.iter = 1000)
+
+# Summary of the results
+summary(samples)
+```
